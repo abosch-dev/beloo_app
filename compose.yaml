@@ -1,0 +1,37 @@
+services:
+  # 1. Base de Datos con PostGIS
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: beloodb
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d beloodb" ] # Usa el usuario y DB correctos
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis para Caché/Proximidad
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+
+  # 3. Aplicación Spring Boot
+  app:
+    build: .
+    ports:
+      - "8081:8080"
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+    environment:
+      # Configuración para conectar a los servicios dentro de Docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/beloodb
+      SPRING_DATA_REDIS_HOST: redis
