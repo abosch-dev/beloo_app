@@ -23,23 +23,20 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
     private UserService userService;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        for (String ignoredPath : WebSecurityConfig.WHITELIST) {
-            if (path.startsWith(ignoredPath)) {
-                return true;
-            }
-        }
-        return request.getMethod().equalsIgnoreCase("OPTIONS");
-    }
-
-    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         final String authorizationHeader = request.getHeader("Authorization");
 
         String userName = null;
         String jwt = null;
+
+        String path = request.getRequestURI();
+        for (String ignoredPath : WebSecurityConfig.WHITELIST) {
+            if (path.startsWith(ignoredPath)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+        }
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")){
             jwt = authorizationHeader.substring(7);

@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,18 +21,24 @@ import java.util.List;
 public class WebSecurityConfig {
 
     public static final String[] WHITELIST = {
+            "/v1/api/swagger-ui",
             "/v1/api/swagger-ui/",
             "/swagger-ui.html",
             "/v1/api/v3/api-docs.yaml",
             "/v1/api/v3/api-docs/",
             "/v1/api/v3/api-docs",
+            "/v1/api/v3/api-docs/**",
             "/v1/api/v3/api-docs/swagger-config",
             "/v1/api/swagger-resources/",
+            "/v1/api/swagger-resources/**",
+            "/v1/api/webjars/**",
             "/v1/api/webjars/",
             "/swagger-ui.html",
+            "/swagger-ui",
             "/swagger-ui/**",
             "/v3/api-docs",
             "/v3/api-docs/",
+            "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/webjars/",
             "/auth/login"
@@ -43,10 +48,10 @@ public class WebSecurityConfig {
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers(WHITELIST)
-                        .permitAll()
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(WHITELIST).permitAll()
                         .requestMatchers("/**").authenticated())
-                .httpBasic(Customizer.withDefaults())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(jwtEntryPoint()))
                 .addFilterBefore(jwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
